@@ -1,7 +1,7 @@
 function SimpleVue(obj){
 	this.$el = document.querySelector(obj.el);
 	this.$options = obj;
-	this.plainObj = Object.create(null);
+	this._data = Object.create(null);
 	this.init();
 	obj = null;
 };
@@ -33,11 +33,17 @@ SimpleVue.prototype = {
 			that = this;
 		keys.forEach(function(elem){
 			Object.defineProperty(that, elem, {
+				enumerable: true,
+				configurable: true,
 				get: function(){
-					return that.plainObj[elem];
+					return that._data[elem];
 				},
-				set: function(val){
-					that.plainObj[elem] = val;
+				set: function(newVal){
+					var oldVal = that[elem];
+					if(oldVal === newVal){
+						return;
+					}
+					that._data[elem] = newVal;
 					SimpleVue.throttle(that.update, that, 50);
 				}
 			});
