@@ -3,7 +3,6 @@
     <meta charset="utf-8">
 </head>
     <body>
-		<!--
 		<div id="container">
 			<h1 style="color:red">simple virtual dom</h1>
 			<p>hello world</p>
@@ -12,12 +11,13 @@
 				<li>item #2</li>
 			</ul>
 		</div>
-		-->
-		<script src="newVirtualDOM.js"></script>
+		<script src="./newVirtualDOM.js"></script>
 		<script>
-			var vnode = run(html3);
-			var $body = document.querySelector('body');
-			$body.append(vnode.render());
+			var html = document.querySelector('#container').outerHTML;
+			var vnode = run(html.replace(/[\n\r\t]/g, ''));
+			var body = document.body;
+			document.body.innerHTML = '';
+			body.appendChild(vnode.render());
 		</script>		
     </body>
 </html>
