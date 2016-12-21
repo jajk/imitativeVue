@@ -1,2 +1,2 @@
 # imitativeVue
-the main idea is that imitating the data driven of Vue.
+the main idea is that imitating the data driven of Vue and virtual DOM.
