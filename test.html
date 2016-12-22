@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+</head>
+    <body>
+		<div id="container">
+			<h1 style="color:red;" class="TestVue">{{mainTitle}}</h1>
+			<p>{{subTitlt}}</p>
+			<ul>
+				<li>{{content1}}</li>
+				<li>{{content2}}</li>
+			</ul>
+		</div>
+		<script src="./simpleVue.js"></script>
+		<script>
+			var vm = new SimpleVue({
+			    el: '#container',
+			    data: {
+				   mainTitle: 'simple virtual dom',
+					subTitlt: 'hello world',
+					content1: 'item #1',
+					content2: 'item #2'
+				},
+				created: function(){
+				    console.log('I am created');
+				}
+			});
+		</script>	
+    </body>
+</html>
