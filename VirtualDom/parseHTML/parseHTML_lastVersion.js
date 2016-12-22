@@ -40,7 +40,7 @@ function getNode(content, propsMsg, tagName){
 	this.content = content;
 	this.tagName = tagName;
 	this.children = [];
-	var reg = /(\w+)\s*=\s*(["'])(.*)\2/g,
+	var reg = /(\w+)\s*=\s*(["'])(.*?)\2/g,
 	    props = {};
 	if(propsMsg){
 	    propsMsg.replace(reg, function(wd, $1, $2, $3){
