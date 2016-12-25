@@ -2,6 +2,7 @@ function SimpleVue(obj){
 	this.$el = document.querySelector(obj.el);
 	this.$options = obj;
 	this._data = Object.create(null);
+	this.listWatchmen = new Watchmen(); 
 	this.init();
 	obj = null;
 };
@@ -16,28 +17,26 @@ SimpleVue.callHook = function(vm, hook){
 	if(handler){
 		handler.call(vm);
 	}
-}
+};
 SimpleVue.prototype = {
 	constructor: SimpleVue,
 	init: function(){
-		this.getTemplate();
 		this.initNodes();
 		this.initPage();
 		this.watchData();
 		SimpleVue.callHook(this, 'created');
 	},
-	getTemplate: function(){
-	    this.innerTemplate = this.$el.innerHTML;	
-	},
 	initNodes: function(){
 		var template = this.$el.outerHTML.replace(/[\n\r\t]/g, ''),
 			body = document.body;
-		this.nodes = transformHTML2Nodes(template);
+		this.nodes = transformHTML2Nodes.call(this, template);
 	},
 	initPage: function(){
-		var body = document.body;
-		body.innerHTML = '';
-        body.appendChild(this.nodes.render());		
+        var parentNode = this.$el.parentNode,
+		    newNode = this.nodes.render();
+        parentNode.replaceChild(newNode, this.$el);
+		this.$el = newNode;
+        parentNode = newNode = null;		
 	},
 	watchData: function(){
 		var data = this.$options.data,
@@ -56,16 +55,44 @@ SimpleVue.prototype = {
 						return;
 					}
 					that._data[elem] = newVal;
-					that.update('{{'+elem+'}}', newVal);
+					that.update(elem);
 				}
 			});
 			that[elem] = data[elem];
 		});
 	},
-	update: function(key, param){
-	    ListWatcher.trigger(key, param);	
+	update: function(key){
+	    this.listWatchmen.trigger(key);	
+	},
+	_gV: function(key){
+	    return this[key];	
 	}
 };
+function setDep(content, attrName, pNode){
+	var subReg = /(\{\{)(\w*?)(\}\})/g,
+		subResult = '',
+		that = this;
+	if(typeof attrName !== 'string'){
+		pNode = attrName;
+		attrName = '';
+	}
+	subResult = content.replace(subReg, function(ws, $1, $2, $3){
+		that.listWatchmen.addAction($2, function(){
+			var finalResult = '',
+				gVreg =  /_gV\((\w*?)\)/g;
+			finalResult = subResult.replace(gVreg, function(ws, $1){
+				return that._gV($1);
+			});
+			if(attrName){
+				pNode.el.removeAttribute(attrName);
+				pNode.el.setAttribute(attrName, finalResult);	
+			}else{
+				pNode.el.innerHTML = finalResult;	
+			}
+		});
+		return '_gV(' + $2 + ')';
+	});
+}
 /*
 	@Param: str(required)   --需要转换的html字符串，如上的html1、html2以及html3
 	        pNode(optional) --父节点
@@ -74,23 +101,21 @@ function transformHTML2Nodes(str, pNode){
 	var result = null,
 		reg = /(<(\w*).*?>)(.*?)<\/\2>/g,
 		vnode = null,
-		strNode,
+		strNode = '',
 		preIndex = 0,
 		len = str.length;
 	do{
-		strNode = 0;
+		strNode = '';
 		preIndex = reg.lastIndex;
 		result = reg.exec(str);
 		if(!result){
 			return str.slice(preIndex);
 		}
-		vnode = new Node(result[0], result[1], result[2]); 
+		vnode = new Node(result[0], result[1], result[2], this); 
 		if(result[3]){
-			strNode = transformHTML2Nodes(result[3], vnode);
+			strNode = transformHTML2Nodes.call(this, result[3], vnode);
 			if(typeof strNode === 'string'){
-				ListWatcher.addAction(strNode, function(val){
-				    this.el.innerHTML = val;	
-				}.bind(vnode));
+				setDep.call(this, strNode, vnode);
 				vnode.children.push(strNode);
 			}
 		}
@@ -99,28 +124,30 @@ function transformHTML2Nodes(str, pNode){
 		}
 	}while(reg.lastIndex!==(len));
 	return vnode;
-}
+};
 /*
     @Param:  content --该节点下的outerHtml字符串
 	        propsMsg --该节点中的属性信息字符串，如'<div id="container">'
 			 tagName --该节点类型字符串，如div
 */
-function Node(content, propsMsg, tagName){
+function Node(content, propsMsg, tagName, vm){
 	if(!(this instanceof Node)){
 		return new Node(tagName, props, children);
 	}
 	this.content = content;
 	this.tagName = tagName;
 	this.children = [];
+	var that = this;
 	var reg = /(\w+)\s*=\s*(["'])(.*?)\2/g,
 	    props = {};
 	if(propsMsg){
 	    propsMsg.replace(reg, function(wd, $1, $2, $3){
+			setDep.call(vm, $3, $1, that);
 			props[$1] = $3;
 		});	
 	}
 	this.props = props;
-}
+};
 Node.prototype.render = function(){
 	var el = document.createElement(this.tagName),
 	    props = this.props,
@@ -141,32 +168,31 @@ Node.prototype.render = function(){
 	});
 	this.el = el;
 	return el;
-}
-function EventTarget(){
+};
+function Watchmen(){
+	if(!(this instanceof Watchmen)){
+		return new Watchmen();
+	}
     this.listener = {};
-}
-EventTarget.prototype = {
-    constructor:EventTarget,
+};
+Watchmen.prototype = {
+    constructor:Watchmen,
     addAction: function(actionName, fn){
         if(typeof actionName === 'string' && typeof fn === 'function'){
-            //如果不存在actionName，就新建一个
             if(typeof this.listener[actionName] === 'undefined'){
                 this.listener[actionName] = [fn];
             }
-            //否则，直接往相应actinoName里面塞
             else{
                 this.listener[actionName].push(fn);
             }
         }
     },
     trigger: function(actionName){
-        var actionArray = this.listener[actionName],
-		    otherVal = Array.prototype.slice.call(arguments, 1);
-        //触发一系列actionName里的函数
+        var actionArray = this.listener[actionName];
         if(actionArray instanceof Array){
             for(var i = 0, len = actionArray.length; i < len; i++){
                 if(typeof actionArray[i] === 'function'){
-                    actionArray[i].apply(null,otherVal);
+                    actionArray[i]();
                 }
             }   
         }
@@ -176,7 +202,6 @@ EventTarget.prototype = {
         var actionArray = this.listener[actionName];
         if(typeof actionName === 'string' && actionArray instanceof Array){
             if(typeof fn === 'function'){
-                //清除actionName中对应的fn方法
                 for(var i=0, len = actionArray.length; i < len; i++){
                     if(actionArray[i] === fn){
                         this.listener[actionName].splice(i,1);
@@ -187,4 +212,3 @@ EventTarget.prototype = {
         actionArray = null;
     }
 };
-var ListWatcher = new EventTarget();
