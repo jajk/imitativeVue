@@ -5,25 +5,43 @@
 </head>
     <body>
 		<div id="container">
-			<h1 style="color:red;" class="TestVue">{{mainTitle}}</h1>
-			<p>{{subTitlt}}</p>
-			<ul>
-				<li>{{content1}}</li>
-				<li>{{content2}}</li>
-			</ul>
+			<h1 :style="border:1px solid black;color:{{colorName}};width:500px;">{{who}} 2 {{whom}}</h1>
+			<p>someday, {{who}} meet {{whom}}, and he said that you are {{what}}</p>
+			<p>{{content}}</p>
+		</div>
+		<div id="anotherContainer">
+		    <h1 style="color:red;">{{another}}</h1>
 		</div>
 		<script src="./simpleVue.js"></script>
 		<script>
 			var vm = new SimpleVue({
 			    el: '#container',
 			    data: {
-				   mainTitle: 'simple virtual dom',
-					subTitlt: 'hello world',
-					content1: 'item #1',
-					content2: 'item #2'
+				   who:'Monkey',
+				   whom: 'Dorie',
+				   what: 'beautiful',
+				   content: 'I just want to say you are beautiful',
+				   colorName: 'gray'
 				},
 				created: function(){
-				    console.log('I am created');
+					var that = this,
+					    count = 0;
+					setInterval(function(){
+						switch(count){
+						    case 0: that.colorName = 'red';count++;break;
+							case 1: that.colorName = 'green';count++;break;
+							case 2: that.colorName = 'blue';count++;break;
+							case 3: that.colorName = 'yellow';count++;break;
+							case 4: that.colorName = 'pink';count++;break;
+							case 5: that.colorName = 'gray';count = 0;break;
+						}
+					}, 1000);
+				}
+			});
+			var vm1 = new SimpleVue({
+			    el: '#anotherContainer',
+			    data: {
+				   another: 'hello, man'
 				}
 			});
 		</script>	
