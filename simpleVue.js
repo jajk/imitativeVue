@@ -23,6 +23,7 @@ SimpleVue.prototype = {
 	init: function(){
 		this.initNodes();
 		this.initPage();
+		SimpleVue.callHook(this, 'beforeCreate');
 		this.watchData();
 		SimpleVue.callHook(this, 'created');
 	},
