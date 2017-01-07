@@ -25,6 +25,7 @@ p.walk = function(data){
 }
 
 p.convert = function(key, val){
+	let ob = this;
 	Object.defineProperty(this.data, key, {
 		enumerable: true,
         configurable: true,
@@ -39,16 +40,16 @@ p.convert = function(key, val){
 			}else{
 				val = newVal;
 			}
-			this.notify('set', key);
+			ob.notify('set', key);
 		}
 	});
 }
 
 p.observe = function(key, data){
 	if(typeof data === 'object'){
-	    new Observer(data);	
-		data._parent = {
-			child: key,
+	    let ob = new Observer(data);	
+		ob._parent = {
+			key,
 			ob: this
 		};
 	}	
@@ -93,8 +94,8 @@ p.emit = function(eventName){
 
 p.notify = function(eventName){
     let ob = this._parent && this._parent.ob;
-	console.log(this._parent && this._parent.key);
-	console.log('event--'+eventName);
+	let key = ob && this._parent.key || 'root';
+	console.log('parent--'+key+'  event--'+eventName);
 	this.emit(eventName);
     ob && ob.notify(eventName);	
 }
