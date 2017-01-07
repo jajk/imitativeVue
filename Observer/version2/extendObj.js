@@ -1,16 +1,21 @@
-let extendObj = {};
+const extendObj = {};
 
-function proxyObject(obj, key, func){
+function proxyObject(obj, key, val, enume){
     Object.defineProperty(obj, key, {
-		enumerable: true,
+		value: val,
+		enumerable: !!enume,
         writable: true,
-        configurable: true,
-		value: func
+        configurable: true
 	});	
 };
 
 proxyObject(extendObj, '$set', function(key, val){
-    let ob = this.$Observer;
-	ob.observe(val);
-	ob.convert(key, val);	
+    if(this.hasOwnProperty(key)){
+		return;
+	}else{
+		proxyObject(this, key, val, true);
+		let ob = this.$Observer;
+		ob.observe(val);
+		ob.convert(key, val);	
+	}	
 });

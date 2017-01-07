@@ -23,6 +23,8 @@ p.walk = function(data){
 
 p.convert = function(key, val){
 	Object.defineProperty(this.data, key, {
+		enumerable: true,
+        configurable: true,
 		get: ()=>{
 			console.log('访问了'+key+'  值为'+val);
 			return val;
