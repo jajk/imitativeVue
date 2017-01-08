@@ -1,3 +1,5 @@
+'use strict';
+
 function Observer(data){
 	if(!(this instanceof Observer)){
 		return new Observer(data);

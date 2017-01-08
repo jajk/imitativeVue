@@ -1,3 +1,5 @@
+'use strict';
+
 const extendObj = {};
 
 function proxyObject(obj, key, val, enume){
@@ -13,7 +15,6 @@ proxyObject(extendObj, '$set', function(key, val){
     if(this.hasOwnProperty(key)){
 		return;
 	}else{
-		proxyObject(this, key, val, true);
 		let ob = this.$Observer;
 		ob.observe(val);
 		ob.convert(key, val);	
