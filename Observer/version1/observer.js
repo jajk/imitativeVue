@@ -27,9 +27,7 @@ p.convert = function(key, val){
 		},
 		set: (newVal)=>{
 			console.log('设置了'+key+'  值为'+newVal);
-			if(newVal === val){
-				return;
-			}else{
+			if(newVal !== val){
 				val = newVal;
 			}
 		}
